@@ -5,19 +5,26 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+const baseDomain = "http://www.dmm.com"
+
 type ItemOfDmmComIdol struct {
 	ItemCode             string
 	Title                string
 	PackageImageThumbURL string
 	PackageImageURL      string
 	ActressList          []*Actress
+	SampleImageList      []*SampleImage
 }
 
 type Actress struct {
-	Id string
+	ListPageURL string
 	Name string
 }
 
+type SampleImage struct {
+	ImageThumbURL string
+	ImageURL      string
+}
 
 func New(url string) *ItemOfDmmComIdol {
 
@@ -57,10 +64,28 @@ func New(url string) *ItemOfDmmComIdol {
 
 		href, exists := selection.Attr("href")
 		if(exists) {
-			actress.Id = href
+			actress.ListPageURL = baseDomain + href
 		}
 
 		result.ActressList = append(result.ActressList, &actress)
+	})
+
+
+	sampleImageUrlMatcher := regexp.MustCompile(`([^-]+)(-\d+\..+)`)
+
+	doc.Find("#sample-image-block > a").Each(func(index int, selection *goquery.Selection) {
+		sampleImage := SampleImage{}
+
+		src, exists := selection.Find("img").First().Attr("src")
+		if(exists) {
+			sampleImage.ImageThumbURL = src
+			
+			imageURL := sampleImageUrlMatcher.ReplaceAllString(src, "$1") + "jp" + sampleImageUrlMatcher.ReplaceAllString(src, "$2")
+		
+			sampleImage.ImageURL = imageURL
+		}
+
+		result.SampleImageList = append(result.SampleImageList, &sampleImage)
 	})
 
 	return &result
