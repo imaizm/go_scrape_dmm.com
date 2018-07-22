@@ -12,11 +12,11 @@ type ItemOfDmmComIdol struct {
 	Title                string
 	PackageImageThumbURL string
 	PackageImageURL      string
-	ActressList          []*Actress
+	ActorList            []*Actor
 	SampleImageList      []*SampleImage
 }
 
-type Actress struct {
+type Actor struct {
 	ListPageURL string
 	Name string
 }
@@ -36,57 +36,90 @@ func New(url string) *ItemOfDmmComIdol {
 
 	result := ItemOfDmmComIdol{}
 
+	result.ItemCode = getItemCode(url)
+	result.Title = getTitle(doc)
+	result.PackageImageThumbURL = getPackageImageThumbURL(doc, result.ItemCode)
+	result.PackageImageURL = getPackageImageURL(doc, result.ItemCode)
+	result.ActorList = getActorList(doc)
+	result.SampleImageList = getSampleImageList(doc)
+
+	return &result
+}
+
+func getItemCode(url string) string {
 	cidMatcher := regexp.MustCompile(`cid=([^/]+)`)
 	itemCode := cidMatcher.FindString(url)
 	itemCode = cidMatcher.ReplaceAllString(itemCode, "$1")
-	result.ItemCode = itemCode
+	return itemCode
+}
 
+func getTitle(doc *goquery.Document) string {
 	selection := doc.Find("#title")
-	result.Title = selection.First().Text()
+	title := selection.First().Text()
+	return title
+}
 
-	doc.Find("#package-src-"+itemCode).Each(func(index int, selection *goquery.Selection) {
-		img_src, exists := selection.Attr("src")
+func getPackageImageThumbURL(doc *goquery.Document, itemCode string) string {
+	packageImageThumbURL := ""
+	doc.Find("#package-src-" + itemCode).Each(func(index int, selection *goquery.Selection) {
+		imgSrc, exists := selection.Attr("src")
 		if(exists) {
-			result.PackageImageThumbURL = img_src
+			packageImageThumbURL = imgSrc
 		}
 	})
+	return packageImageThumbURL
+}
 
-	doc.Find("#"+itemCode).Each(func(index int, selection *goquery.Selection) {
-		a_href, exists := selection.Attr("href")
+func getPackageImageURL(doc *goquery.Document, itemCode string) string {
+	packageImageURL := ""
+	doc.Find("#" + itemCode).Each(func(index int, selection *goquery.Selection) {
+		aHref, exists := selection.Attr("href")
 		if(exists) {
-			result.PackageImageURL = a_href
+			packageImageURL = aHref
 		}
 	})
+	return packageImageURL
+}
+
+func getActorList(doc *goquery.Document) []*Actor {
+	var actorList []*Actor
 
 	doc.Find("table.mg-b20").First().Find("a[href *= 'article=actor']").Each(func(index int, selection *goquery.Selection) {
-		actress := Actress{}
-		actress.Name = selection.Text()
+		actor := Actor{}
+		actor.Name = selection.Text()
 
 		href, exists := selection.Attr("href")
 		if(exists) {
-			actress.ListPageURL = baseDomain + href
+			actor.ListPageURL = baseDomain + href
 		}
 
-		result.ActressList = append(result.ActressList, &actress)
+		actorList = append(actorList, &actor)
 	})
 
+	return actorList
+}
 
-	sampleImageUrlMatcher := regexp.MustCompile(`([^-]+)(-\d+\..+)`)
+func getSampleImageList(doc *goquery.Document) []*SampleImage {
+	var sampleImageList []*SampleImage
+
+	sampleImageURLMatcher := regexp.MustCompile(`([^-]+)(-\d+\..+)`)
 
 	doc.Find("#sample-image-block > a").Each(func(index int, selection *goquery.Selection) {
 		sampleImage := SampleImage{}
 
-		src, exists := selection.Find("img").First().Attr("src")
+		imgSrc, exists := selection.Find("img").First().Attr("src")
 		if(exists) {
-			sampleImage.ImageThumbURL = src
+			sampleImage.ImageThumbURL = imgSrc
 			
-			imageURL := sampleImageUrlMatcher.ReplaceAllString(src, "$1") + "jp" + sampleImageUrlMatcher.ReplaceAllString(src, "$2")
+			imageURL :=
+				sampleImageURLMatcher.ReplaceAllString(imgSrc, "$1") + "jp" +
+				sampleImageURLMatcher.ReplaceAllString(imgSrc, "$2")
 		
 			sampleImage.ImageURL = imageURL
 		}
 
-		result.SampleImageList = append(result.SampleImageList, &sampleImage)
+		sampleImageList = append(sampleImageList, &sampleImage)
 	})
 
-	return &result
+	return sampleImageList
 }

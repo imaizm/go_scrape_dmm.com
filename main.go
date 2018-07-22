@@ -14,7 +14,7 @@ func main() {
 	fmt.Println(result.Title)
 	fmt.Println(result.PackageImageThumbURL)
 	fmt.Println(result.PackageImageURL)
-	for index, value := range result.ActressList {
+	for index, value := range result.ActorList {
 		fmt.Println(strconv.Itoa(index) + " : " + value.Name + " : " + value.ListPageURL)
 	}
 	for index, value := range result.SampleImageList {
