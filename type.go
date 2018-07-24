@@ -1,8 +1,10 @@
-package go_scrape_dmm_com
+package goScrapeDmmCom
 
 import (
 	"regexp"
+
 	"github.com/PuerkitoBio/goquery"
+	"github.com/imaizm/go_scrape_dmm-common"
 )
 
 const baseDomain = "http://www.dmm.com"
@@ -18,7 +20,7 @@ type ItemOfDmmComIdol struct {
 
 type Actor struct {
 	ListPageURL string
-	Name string
+	Name        string
 }
 
 type SampleImage struct {
@@ -33,7 +35,6 @@ func New(url string) *ItemOfDmmComIdol {
 		panic(err)
 	}
 
-
 	result := ItemOfDmmComIdol{}
 
 	result.ItemCode = getItemCode(url)
@@ -47,10 +48,7 @@ func New(url string) *ItemOfDmmComIdol {
 }
 
 func getItemCode(url string) string {
-	cidMatcher := regexp.MustCompile(`cid=([^/]+)`)
-	itemCode := cidMatcher.FindString(url)
-	itemCode = cidMatcher.ReplaceAllString(itemCode, "$1")
-	return itemCode
+	return goScrapeDmmCommon.GetItemCodeFromURL(url)
 }
 
 func getTitle(doc *goquery.Document) string {
@@ -63,7 +61,7 @@ func getPackageImageThumbURL(doc *goquery.Document, itemCode string) string {
 	packageImageThumbURL := ""
 	doc.Find("#package-src-" + itemCode).Each(func(index int, selection *goquery.Selection) {
 		imgSrc, exists := selection.Attr("src")
-		if(exists) {
+		if exists {
 			packageImageThumbURL = imgSrc
 		}
 	})
@@ -74,7 +72,7 @@ func getPackageImageURL(doc *goquery.Document, itemCode string) string {
 	packageImageURL := ""
 	doc.Find("#" + itemCode).Each(func(index int, selection *goquery.Selection) {
 		aHref, exists := selection.Attr("href")
-		if(exists) {
+		if exists {
 			packageImageURL = aHref
 		}
 	})
@@ -89,7 +87,7 @@ func getActorList(doc *goquery.Document) []*Actor {
 		actor.Name = selection.Text()
 
 		href, exists := selection.Attr("href")
-		if(exists) {
+		if exists {
 			actor.ListPageURL = baseDomain + href
 		}
 
@@ -108,13 +106,13 @@ func getSampleImageList(doc *goquery.Document) []*SampleImage {
 		sampleImage := SampleImage{}
 
 		imgSrc, exists := selection.Find("img").First().Attr("src")
-		if(exists) {
+		if exists {
 			sampleImage.ImageThumbURL = imgSrc
-			
+
 			imageURL :=
 				sampleImageURLMatcher.ReplaceAllString(imgSrc, "$1") + "jp" +
-				sampleImageURLMatcher.ReplaceAllString(imgSrc, "$2")
-		
+					sampleImageURLMatcher.ReplaceAllString(imgSrc, "$2")
+
 			sampleImage.ImageURL = imageURL
 		}
 

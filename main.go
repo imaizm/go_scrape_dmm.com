@@ -1,4 +1,4 @@
-package go_scrape_dmm_com
+package goScrapeDmmCom
 
 import (
 	"fmt"
