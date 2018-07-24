@@ -1,8 +1,6 @@
 package goScrapeDmmCom
 
 import (
-	"regexp"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/imaizm/go_scrape_dmm-common"
 )
@@ -15,7 +13,7 @@ type ItemOfDmmComIdol struct {
 	PackageImageThumbURL string
 	PackageImageURL      string
 	ActorList            []*Actor
-	SampleImageList      []*SampleImage
+	SampleImageList      []*goScrapeDmmCommon.SampleImage
 }
 
 type Actor struct {
@@ -97,27 +95,6 @@ func getActorList(doc *goquery.Document) []*Actor {
 	return actorList
 }
 
-func getSampleImageList(doc *goquery.Document) []*SampleImage {
-	var sampleImageList []*SampleImage
-
-	sampleImageURLMatcher := regexp.MustCompile(`([^-]+)(-\d+\..+)`)
-
-	doc.Find("#sample-image-block > a").Each(func(index int, selection *goquery.Selection) {
-		sampleImage := SampleImage{}
-
-		imgSrc, exists := selection.Find("img").First().Attr("src")
-		if exists {
-			sampleImage.ImageThumbURL = imgSrc
-
-			imageURL :=
-				sampleImageURLMatcher.ReplaceAllString(imgSrc, "$1") + "jp" +
-					sampleImageURLMatcher.ReplaceAllString(imgSrc, "$2")
-
-			sampleImage.ImageURL = imageURL
-		}
-
-		sampleImageList = append(sampleImageList, &sampleImage)
-	})
-
-	return sampleImageList
+func getSampleImageList(doc *goquery.Document) []*goScrapeDmmCommon.SampleImage {
+	return goScrapeDmmCommon.GetSampleImageList(doc)
 }
