@@ -7,6 +7,7 @@ import (
 
 const baseDomain = "http://www.dmm.com"
 
+// ItemOfDmmComIdol : ItemOfDmmComIdol Info Struct
 type ItemOfDmmComIdol struct {
 	ItemCode             string
 	Title                string
@@ -16,16 +17,13 @@ type ItemOfDmmComIdol struct {
 	SampleImageList      []*goScrapeDmmCommon.SampleImage
 }
 
+// Actor : Actor Info Struct
 type Actor struct {
 	ListPageURL string
 	Name        string
 }
 
-type SampleImage struct {
-	ImageThumbURL string
-	ImageURL      string
-}
-
+// New : create ItemOfDmmComIdol struct from url
 func New(url string) *ItemOfDmmComIdol {
 
 	doc, err := goquery.NewDocument(url)
